@@ -1,9 +1,9 @@
-import { type Dispatch, type MutableRefObject, type SetStateAction } from "react";
+import { type Dispatch, type RefObject, type SetStateAction } from "react";
 import type { VideoClient } from "@zoom/videosdk";
 import { Mic, MicOff, Video, VideoOff } from "lucide-react";
 
 const MicButton = (props: {
-  client: MutableRefObject<typeof VideoClient>;
+  client: RefObject<typeof VideoClient>;
   isAudioMuted: boolean;
   setIsAudioMuted: Dispatch<SetStateAction<boolean>>;
 }) => {
@@ -21,7 +21,7 @@ const MicButton = (props: {
 };
 
 const CameraButton = (props: {
-  client: MutableRefObject<typeof VideoClient>;
+  client: RefObject<typeof VideoClient>;
   isVideoMuted: boolean;
   setIsVideoMuted: Dispatch<SetStateAction<boolean>>;
   renderVideo: (event: {

@@ -15,60 +15,37 @@ const Videocall = (props: { slug: string; JWT: string }) => {
   const jwt = props.JWT;
   const [inSession, setInSession] = useState(false);
   const client = useRef<typeof VideoClient>(ZoomVideo.createClient());
-  const [isVideoMuted, setIsVideoMuted] = useState(
-    !client.current.getCurrentUserInfo()?.bVideoOn
-  );
-  const [isAudioMuted, setIsAudioMuted] = useState(
-    client.current.getCurrentUserInfo()?.muted ?? true
-  );
+  const [isVideoMuted, setIsVideoMuted] = useState(!client.current.getCurrentUserInfo()?.bVideoOn);
+  const [isAudioMuted, setIsAudioMuted] = useState(client.current.getCurrentUserInfo()?.muted ?? true);
   const videoContainerRef = useRef<HTMLDivElement>(null);
 
   const joinSession = async () => {
     await client.current.init("en-US", "Global", { patchJsMedia: true });
-    client.current.on(
-      "peer-video-state-change",
-      (payload) => void renderVideo(payload)
-    );
-    await client.current.join(session, jwt, userName).catch((e) => {
-      console.log(e);
-    });
+    client.current.on("peer-video-state-change", renderVideo);
+    await client.current.join(session, jwt, userName)
+      .catch((e) => console.log(e));
     setInSession(true);
     const mediaStream = client.current.getMediaStream();
     await mediaStream.startAudio();
     setIsAudioMuted(mediaStream.isAudioMuted());
     await mediaStream.startVideo();
     setIsVideoMuted(!mediaStream.isCapturingVideo());
-    await renderVideo({
-      action: "Start",
-      userId: client.current.getCurrentUserInfo().userId,
-    });
+    await renderVideo({ action: "Start", userId: client.current.getCurrentUserInfo().userId, });
   };
 
-  const renderVideo = async (event: {
-    action: "Start" | "Stop";
-    userId: number;
-  }) => {
+  const renderVideo = async (event: { action: "Start" | "Stop"; userId: number; }) => {
     const mediaStream = client.current.getMediaStream();
     if (event.action === "Stop") {
       const element = await mediaStream.detachVideo(event.userId);
-      Array.isArray(element)
-        ? element.forEach((el) => el.remove())
-        : element.remove();
+      Array.isArray(element) ? element.forEach((el) => el.remove()) : element.remove();
     } else {
-      const userVideo = await mediaStream.attachVideo(
-        event.userId,
-        VideoQuality.Video_360P
-      );
+      const userVideo = await mediaStream.attachVideo(event.userId, VideoQuality.Video_360P);
       videoContainerRef.current!.appendChild(userVideo as VideoPlayer);
     }
   };
 
   const leaveSession = async () => {
-    client.current.off(
-      "peer-video-state-change",
-      (payload: { action: "Start" | "Stop"; userId: number }) =>
-        void renderVideo(payload)
-    );
+    client.current.off("peer-video-state-change", renderVideo);
     await client.current.leave().catch((e) => console.log("leave error", e));
     // hard refresh to clear the state
     window.location.href = "/";
