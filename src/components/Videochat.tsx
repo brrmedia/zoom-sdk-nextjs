@@ -10,7 +10,7 @@ import { CameraButton, MicButton } from "./MuteButtons";
 import { PhoneOff } from "lucide-react";
 import { Button } from "./ui/button";
 
-const Videocall = (props: { slug: string; JWT: string }) => {
+const Videochat = (props: { slug: string; JWT: string }) => {
   const session = props.slug;
   const jwt = props.JWT;
   const [inSession, setInSession] = useState(false);
@@ -94,7 +94,7 @@ const Videocall = (props: { slug: string; JWT: string }) => {
   );
 };
 
-export default Videocall;
+export default Videochat;
 
 const videoPlayerStyle = {
   height: "75vh",
