@@ -19,6 +19,13 @@ const Videochat = (props: { slug: string; JWT: string }) => {
   const [isAudioMuted, setIsAudioMuted] = useState(client.current.getCurrentUserInfo()?.muted ?? true);
   const videoContainerRef = useRef<HTMLDivElement>(null);
 
+  // Track state for chat messages and chat input text
+  const [messages, setMessages] = useState([]);
+  const [messageInput, setMessageInput] = useState('');
+
+  // Get the chat client reference to enable chat functionality
+  const chat = client.current.getChatClient();
+
   const joinSession = async () => {
     await client.current.init("en-US", "Global", { patchJsMedia: true });
     client.current.on("peer-video-state-change", renderVideo);
@@ -31,7 +38,18 @@ const Videochat = (props: { slug: string; JWT: string }) => {
     await mediaStream.startVideo();
     setIsVideoMuted(!mediaStream.isCapturingVideo());
     await renderVideo({ action: "Start", userId: client.current.getCurrentUserInfo().userId, });
+
+    // Display chat messages by listening for the incoming messages
+    client.current.on('chat-on-message', (payload) => {
+      console.log(payload)
+      console.log(`Message: ${payload.message}, from ${payload.sender.name} to ${payload.receiver.name}`)
+    })
   };
+
+  // TODO Function for sending messages
+  const sendMessage = async () => {
+    
+  }
 
   const renderVideo = async (event: { action: "Start" | "Stop"; userId: number; }) => {
     const mediaStream = client.current.getMediaStream();
