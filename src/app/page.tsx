@@ -11,7 +11,7 @@ export default function Home() {
   return (
     <main className="flex flex-col items-center justify-between p-24">
       <h1 className="text-3xl font-bold text-center my-4">
-        Zoom VideoSDK Next.js Quickstart
+        Zoom VideoSDK Prototype
       </h1>
       <Input
         type="text"
