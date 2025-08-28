@@ -23,6 +23,11 @@ const Videochat = (props: { slug: string; JWT: string }) => {
   const [messages, setMessages] = useState([]);
   const [messageInput, setMessageInput] = useState('');
 
+  const currentUser = client.current.getCurrentUserInfo();
+  const isHost = client.current.isOriginalHost(); // Returns true if JWT payload role_type === 1
+
+  console.log("Is this user the original host? " + isHost);
+
   // Get the chat client reference to enable chat functionality
   const chat = client.current.getChatClient();
 
@@ -39,7 +44,7 @@ const Videochat = (props: { slug: string; JWT: string }) => {
     setIsVideoMuted(!mediaStream.isCapturingVideo());
     await renderVideo({ action: "Start", userId: client.current.getCurrentUserInfo().userId, });
 
-    // Display chat messages by listening for the incoming messages
+    // TODO Display chat messages by listening for the incoming messages (INCOMPLETE)
     client.current.on('chat-on-message', (payload) => {
       console.log(payload)
       console.log(`Message: ${payload.message}, from ${payload.sender.name} to ${payload.receiver.name}`)
@@ -108,6 +113,13 @@ const Videochat = (props: { slug: string; JWT: string }) => {
           </div>
         </div>
       )}
+      {/* Display participants list if the user is the host */}
+      {isHost && (
+        <>
+          <div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
@@ -125,3 +137,7 @@ const videoPlayerStyle = {
 } as CSSProperties;
 
 const userName = `User-${new Date().getTime().toString().slice(8)}`;
+function isOriginalHost() {
+  throw new Error("Function not implemented.");
+}
+
