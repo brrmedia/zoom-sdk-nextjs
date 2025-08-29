@@ -64,6 +64,29 @@ const Videochat = (props: { slug: string; JWT: string }) => {
     })
   };
 
+  // Functions that enable the host user to do actions on participants
+  const removeParticipant = async (userId: number) => {
+    await client.current.removeUser(userId);
+  }
+
+  // Check if host requested to mute or unmute mic
+  const muteParticipant = async (userId: number) => {
+    // TODO need to use chat client to check if host sent message asking to mute audio and then use that to trigger mute audio
+    const mediaStream = client.current.getMediaStream();
+    await mediaStream.muteAudio();
+  }
+
+  const unmuteParticipant = async (userId: number) => {
+    client.current.on('host-ask-unmute-audio', (payload) => {
+      const mediaStream = client.current.getMediaStream();
+      await mediaStream.unmuteAudio();
+    });
+  }
+
+  const endSession = async () => {
+    await client.current.leave(true); // Ends session for everyone
+  }
+
   // TODO Function for sending messages
   const sendMessage = async () => {
     
