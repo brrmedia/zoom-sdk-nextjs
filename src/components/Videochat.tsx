@@ -11,14 +11,16 @@ import { CameraButton, MicButton } from "./MuteButtons";
 import { PhoneOff } from "lucide-react";
 import { Button } from "./ui/button";
 
-const Videochat = (props: { slug: string; JWT: string }) => {
+const Videochat = (props: { slug: string; JWT: string, role:number }) => {
   const session = props.slug;
   const jwt = props.JWT;
+  const role = props.role;
   const [inSession, setInSession] = useState(false);
   const client = useRef<typeof VideoClient>(ZoomVideo.createClient());
   const [isVideoMuted, setIsVideoMuted] = useState(!client.current.getCurrentUserInfo()?.bVideoOn);
   const [isAudioMuted, setIsAudioMuted] = useState(client.current.getCurrentUserInfo()?.muted ?? true);
   const videoContainerRef = useRef<HTMLDivElement>(null);
+  const userName = `User-${new Date().getTime().toString().slice(8)}`;
 
   // Track state for chat messages and chat input text
   const [messages, setMessages] = useState([]);
@@ -29,15 +31,16 @@ const Videochat = (props: { slug: string; JWT: string }) => {
 
   // Update participant state when they join or leave
   useEffect(() => {
-    client.current.on("user-added", (payload) => {
+    client.current.on("user-added", (payload: any) => {
       const participantsMap = client.current.getAllUser()
       const participants = Array.from(participantsMap.values());
       setParticipants(participants);
     })
+    // Add cleanup function here
   }, [inSession])
 
   const currentUser = client.current.getCurrentUserInfo();
-  const isHost = client.current.isOriginalHost(); // Returns true if JWT payload role_type === 1
+  const isHost = client.current.isOriginalHost() || role === 1; // Returns true if JWT payload role_type === 1
 
   console.log("Is this user the original host? " + isHost);
 
@@ -76,8 +79,8 @@ const Videochat = (props: { slug: string; JWT: string }) => {
     await mediaStream.muteAudio();
   }
 
-  const unmuteParticipant = async (userId: number) => {
-    client.current.on('host-ask-unmute-audio', (payload) => {
+  const unmuteParticipant = (userId: number) => {
+    client.current.on('host-ask-unmute-audio', async (payload) => {
       const mediaStream = client.current.getMediaStream();
       await mediaStream.unmuteAudio();
     });
@@ -155,11 +158,13 @@ const Videochat = (props: { slug: string; JWT: string }) => {
           <div>
             <h2>Participants</h2>
             {participants.map( user => (
-              <div key={user.userId}>
+              <div key={user.userId} className="mt-4">
                 {user.displayName}
-                <button onClick={() => removeParticipant(user.userId)}>Remove</button>
-                <button onClick={() => muteParticipant(user.userId)}>Mute</button>
-                <button onClick={() => unmuteParticipant(user.userId)}>Unmute</button>
+                <div className="space-x-2">
+                  <button onClick={() => removeParticipant(user.userId)}>Remove</button>
+                  <button onClick={() => muteParticipant(user.userId)}>Mute</button>
+                  <button onClick={() => unmuteParticipant(user.userId)}>Unmute</button>
+                </div>
               </div>
             ))}
           </div>
@@ -182,7 +187,6 @@ const videoPlayerStyle = {
   overflow: "hidden",
 } as CSSProperties;
 
-const userName = `User-${new Date().getTime().toString().slice(8)}`;
 function isOriginalHost() {
   throw new Error("Function not implemented.");
 }

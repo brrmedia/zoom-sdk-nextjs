@@ -1,10 +1,21 @@
 import "server-only";
 import { KJUR } from "jsrsasign";
 
+// Track whether this session has been assigned a host - this facilitates the permissions for host vs other users
+let hasHost = false; 
+
+// TODO should reset hasHost when host leaves or session ends >> this will only reset now when server resets (i think)
+
 export async function getData(slug: string) {
-  const JWT = await generateSignature(slug, 1);
-  return JWT;
+  // Assign roletype - 1 is for host, 0 for other users
+  const role = hasHost ? 0 : 1;
+  if (!hasHost) hasHost = true;
+
+  const JWT = await generateSignature(slug, role);
+  return {JWT, role};
 }
+
+// Note - currently I am testing locally so "users" will just be me accessing the video call from different browser tabs
 
 function generateSignature(sessionName: string, role: number) {
   if (!process.env.ZOOM_SDK_KEY || !process.env.ZOOM_SDK_SECRET) {
