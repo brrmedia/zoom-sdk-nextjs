@@ -6,6 +6,7 @@ import ZoomVideo, {
   type Participant,
   VideoQuality,
   type VideoPlayer,
+  ConnectionState
 } from "@zoom/videosdk";
 import { CameraButton, MicButton } from "./MuteButtons";
 import { PhoneOff } from "lucide-react";
@@ -29,31 +30,31 @@ const Videochat = (props: { slug: string; JWT: string, role:number }) => {
   // Track state for current users in vidoo call
   const [participants, setParticipants] = useState<Participant[]>([]);
 
+  // Handle user being added or removed - best way to approach this is using getAllUser()
+  const handleUserChange = (payload: any) => { 
+    const participantsMap = client.current.getAllUser()
+    const participants = Array.from(participantsMap.values());
+    setParticipants(participants);
+    console.log("These are the current participants:" + participants)
+  };
+
   // Update participant state when they join or leave
   useEffect(() => {
-    const handleUserAdded = (payload: any) => { 
-      const participantsMap = client.current.getAllUser()
-      const participants = Array.from(participantsMap.values());
-      setParticipants(participants);
-      console.log("These are the current participants:" + participants)
-    };
-
-    const handleUserRemoved = (payload: any) => {
-      setParticipants((prevParticipants) => 
-        prevParticipants.filter((user) => user.userId !== payload.userId)
-      );
-      console.log("Participant with userId" + payload.userId + "has been removed.")
-    }
-
-    client.current.on("user-added", handleUserAdded)
-    client.current.on("user-removed", handleUserRemoved);
+    client.current.on("user-added", handleUserChange)
+    client.current.on("user-removed", handleUserChange);
 
     // Cleanup functions
     return () => {
-      client.current.off('user-added', handleUserAdded);
-      client.current.off('user-removed', handleUserRemoved)
+      client.current.off('user-added', handleUserChange);
+      client.current.off('user-removed', handleUserChange)
     }
   }, [inSession])
+
+  useEffect(() => {
+    const handleSessionLeft = () => {
+      return
+    }
+  })
 
   const currentUser = client.current.getCurrentUserInfo();
   const isHost = client.current.isOriginalHost() || role === 1; // Returns true if JWT payload role_type === 1
@@ -86,9 +87,12 @@ const Videochat = (props: { slug: string; JWT: string, role:number }) => {
   // Functions that enable the host user to do actions on participants
   const removeParticipant = async (userId: number) => {
     await client.current.removeUser(userId);
-    // TODO FIX THIS---> Update the participants state in the UI - the list isn't changing
+    handleUserChange(userId);
+    
+    // TODO Actually kick participant out of session - right now their screen just freezes 
   }
 
+  // TODO fix this functionality
   // Check if host requested to mute or unmute mic
   const muteParticipant = async (userId: number) => {
     // TODO need to use chat client to check if host sent message asking to mute audio and then use that to trigger mute audio
@@ -96,6 +100,7 @@ const Videochat = (props: { slug: string; JWT: string, role:number }) => {
     await mediaStream.muteAudio();
   }
 
+  // TODO fix this functionality
   const unmuteParticipant = (userId: number) => {
     client.current.on('host-ask-unmute-audio', async (payload) => {
       const mediaStream = client.current.getMediaStream();
@@ -103,6 +108,7 @@ const Videochat = (props: { slug: string; JWT: string, role:number }) => {
     });
   }
 
+  // TODO fix this functionality
   const endSession = async () => {
     await client.current.leave(true); // Ends session for everyone
   }
@@ -123,6 +129,7 @@ const Videochat = (props: { slug: string; JWT: string, role:number }) => {
     }
   };
 
+  // Handle leaving session if you click leave button
   const leaveSession = async () => {
     client.current.off("peer-video-state-change", renderVideo);
     await client.current.leave().catch((e) => console.log("leave error", e));
