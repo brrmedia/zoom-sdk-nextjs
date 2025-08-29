@@ -119,9 +119,9 @@ const Videochat = (props: { slug: string; JWT: string, role:number }) => {
     });
   }
 
-  // TODO fix this functionality
+  // Ends session for everyone - can only be triggered by the host
   const endSession = async () => {
-    await client.current.leave(true); // Ends session for everyone
+    await client.current.leave(true); 
   }
 
   // TODO Function for sending messages
