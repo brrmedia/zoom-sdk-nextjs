@@ -1,8 +1,9 @@
 "use client";
 
-import { CSSProperties, useRef, useState } from "react";
+import { CSSProperties, useRef, useState, useEffect } from "react";
 import ZoomVideo, {
   type VideoClient,
+  type Participant
   VideoQuality,
   type VideoPlayer,
 } from "@zoom/videosdk";
@@ -22,6 +23,18 @@ const Videochat = (props: { slug: string; JWT: string }) => {
   // Track state for chat messages and chat input text
   const [messages, setMessages] = useState([]);
   const [messageInput, setMessageInput] = useState('');
+
+  // Track state for current users in vidoo call
+  const [participants, setParticipants] = useState<Participant[]>([]);
+
+  // Update participant state when they join or leave
+  useEffect(() => {
+    client.current.on("user-added", (payload) => {
+      const participantsMap = client.current.getAllUser()
+      const participants = Array.from(participantsMap.values());
+      setParticipants(participants);
+    })
+  }, [inSession])
 
   const currentUser = client.current.getCurrentUserInfo();
   const isHost = client.current.isOriginalHost(); // Returns true if JWT payload role_type === 1
@@ -117,7 +130,17 @@ const Videochat = (props: { slug: string; JWT: string }) => {
       {isHost && (
         <>
           <div>
+            <h2>Participants</h2>
+            {participants.map( user => (
+              <div key={user.userId}>
+                {user.displayName}
+                <button onClick={() => removeParticipant(user.userId)}>Remove</button>
+                <button onClick={() => muteParticipant(user.userId)}>Mute</button>
+                <button onClick={() => unmuteParticipant(user.userId)}>Unmute</button>
+              </div>
+            ))}
           </div>
+          <button onClick={endSession}>End Session</button>
         </>
       )}
     </div>
