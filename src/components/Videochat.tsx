@@ -50,11 +50,22 @@ const Videochat = (props: { slug: string; JWT: string, role:number }) => {
     }
   }, [inSession])
 
+  // Make sure to redirect user if they are kicked out or session is closed
   useEffect(() => {
-    const handleSessionLeft = () => {
-      return
+    const handleSessionLeft = (payload: any) => {
+      console.log('Connection state event payload:' + payload);
+      
+      if (payload.state === ConnectionState.Closed) {
+        window.location.href = "/";
+      } 
     }
-  })
+
+    client.current.on("connection-change", handleSessionLeft);
+
+    return () => {
+      client.current.off("connection-change", handleSessionLeft);
+    };
+  }, [])
 
   const currentUser = client.current.getCurrentUserInfo();
   const isHost = client.current.isOriginalHost() || role === 1; // Returns true if JWT payload role_type === 1
