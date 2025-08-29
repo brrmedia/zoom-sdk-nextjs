@@ -31,12 +31,28 @@ const Videochat = (props: { slug: string; JWT: string, role:number }) => {
 
   // Update participant state when they join or leave
   useEffect(() => {
-    client.current.on("user-added", (payload: any) => {
+    const handleUserAdded = (payload: any) => { 
       const participantsMap = client.current.getAllUser()
       const participants = Array.from(participantsMap.values());
       setParticipants(participants);
-    })
-    // Add cleanup function here
+      console.log("These are the current participants:" + participants)
+    };
+
+    const handleUserRemoved = (payload: any) => {
+      setParticipants((prevParticipants) => 
+        prevParticipants.filter((user) => user.userId !== payload.userId)
+      );
+      console.log("Participant with userId" + payload.userId + "has been removed.")
+    }
+
+    client.current.on("user-added", handleUserAdded)
+    client.current.on("user-removed", handleUserRemoved);
+
+    // Cleanup functions
+    return () => {
+      client.current.off('user-added', handleUserAdded);
+      client.current.off('user-removed', handleUserRemoved)
+    }
   }, [inSession])
 
   const currentUser = client.current.getCurrentUserInfo();
@@ -70,6 +86,7 @@ const Videochat = (props: { slug: string; JWT: string, role:number }) => {
   // Functions that enable the host user to do actions on participants
   const removeParticipant = async (userId: number) => {
     await client.current.removeUser(userId);
+    // TODO FIX THIS---> Update the participants state in the UI - the list isn't changing
   }
 
   // Check if host requested to mute or unmute mic
