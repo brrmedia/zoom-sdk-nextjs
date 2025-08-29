@@ -3,7 +3,7 @@
 import { CSSProperties, useRef, useState, useEffect } from "react";
 import ZoomVideo, {
   type VideoClient,
-  type Participant
+  type Participant,
   VideoQuality,
   type VideoPlayer,
 } from "@zoom/videosdk";
